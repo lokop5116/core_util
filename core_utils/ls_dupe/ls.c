@@ -35,13 +35,22 @@ int main(int argc, char *argv[]) {
   int iter = 0;
   int end = 1;
 
+  // no path specified, display items in current directory
   if (argc == 1) {
     SHOW_HIDDEN = 0;
     paths[0] = ".";
-  } else if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+  }
+
+  // print help message when -h specified
+  else if (argc == 2 && strcmp(argv[1], "-h") == 0) {
     printf("%s", show_help);
     return 0;
-  } else {
+  }
+
+  // go through specified flags, if -a present then show hiddens items ( entries
+  // beginning with '.' ) add any paths to array of paths and list items in all
+  // of them
+  else {
     for (int i = 1; i < argc; i++) {
       if (strcmp(argv[i], "-a") == 0) {
         SHOW_HIDDEN = 1;
@@ -52,22 +61,27 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  // return from ls function
   int ret = 0;
   for (int i = 0; i < end; i++) {
 
     // printf("%s\n", paths[i]);
 
     printf("%s:\n", paths[i]);
+
+    // add return code
     ret += ListShit(paths[i]);
     printf("\n\n");
   }
 
+  // something went wrong
   if (ret > 0) {
     return 2;
   }
 
   return 0;
 }
+
 int ListShit(const char *path) {
 
   struct open_how how = {.flags = O_RDONLY, .mode = 0, .resolve = 0};
@@ -76,8 +90,10 @@ int ListShit(const char *path) {
                         should really not be using this */
   int num = 0;
 
+  // using openat2 as specified in manual
   long fd = syscall(SYS_openat2, AT_FDCWD, path, &how, sizeof(how));
 
+  // fd less than 0, somethign went wrong while using openat2
   if (fd < 0) {
     printf("ls_dupe: fatal - %s", strerror(errno));
     return 1;
@@ -85,8 +101,10 @@ int ListShit(const char *path) {
 
   char buf[16384];
 
+  // get entries
   int readbuf = syscall(SYS_getdents64, fd, buf, sizeof(buf));
 
+  // something went wrong again
   if (readbuf < 0) {
     printf("ls_dupe: fatal - %s", strerror(errno));
   }
@@ -95,6 +113,7 @@ int ListShit(const char *path) {
 
   for (int pos = 0; pos < readbuf; 1) {
 
+    // manually walk through the buffer
     entry = (struct dirent *)(buf + pos);
 
     if (SHOW_HIDDEN == 1 | entry->d_name[0] != '.') {
@@ -107,6 +126,7 @@ int ListShit(const char *path) {
 
   close(fd);
 
+  // sort our array or entries, not really necessary
   sort_strings(names, num);
 
   for (int i = 0; i < num; i++) {
