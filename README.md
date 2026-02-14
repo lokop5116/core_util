@@ -6,8 +6,9 @@ Rewriting GNU core utils in C. Done using only raw system calls no wrapper funct
 ## Currently Implemented Utils
 
 | **Name** |
+| :---: |
 | ls |
-| [grep]() |
+| [grep](https://github.com/lokop5116/Grep-Dupe) |
 | rm |
 
 
